@@ -94,6 +94,12 @@ def main():
     result = [i - j for i, j in zip(first_line[1], changed)]
     result_0 = [i - j for i, j in zip(first_line[1][11:], changed)]
 
+    unique, counts = np.unique(result, return_counts=True)
+    print(dict(zip(unique, counts)))
+
+    unique, counts = np.unique(result_0, return_counts=True)
+    print(dict(zip(unique, counts)))
+
     fig, ax = plt.subplots(4)
     ax[0].plot(first_line[0], first_line[1])
     ax[1].plot([i for i in range(len(changed))], changed)
