@@ -61,6 +61,7 @@ class Side:
     def __init__(self, line_dot_list, line_color=None):
         self._line = line_dot_list
         self._border_side = False
+        self._cell_link = None
         self._segments = SegmentsList()
 
         self._line_color = line_color
@@ -77,6 +78,10 @@ class Side:
             self._border_side = True
 
     @property
+    def line(self):
+        return self._line
+
+    @property
     def line_color(self):
         return self._line_color
 
@@ -84,11 +89,19 @@ class Side:
     def border_side(self):
         return self._border_side
 
+    @property
+    def cell_link(self):
+        return self._cell_link
+
+    @cell_link.setter
+    def cell_link(self, value):
+        self._cell_link = value
+
     def __getitem__(self, index):
         return self._line_np[index]
 
     def __repr__(self):
-        return str(self._line_np)
+        return f'{self._cell_link}'
 
     def check_border_side(self):
         unique, counts = np.unique(self._line_np[1], return_counts=True)
