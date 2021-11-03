@@ -41,6 +41,7 @@ def solve_puzzle(tiles_folder):
     # spacing between grid columns = min w
     x_nodes = np.arange(0, W, w)
     y_nodes = np.arange(0, H, h)
+    print(x_nodes, y_nodes, len(x_nodes), len(y_nodes))
     xx, yy = np.meshgrid(x_nodes, y_nodes)
     nodes = np.vstack((xx.flatten(), yy.flatten())).T
 
@@ -54,7 +55,7 @@ def solve_puzzle(tiles_folder):
 
 if __name__ == "__main__":
     # directory = sys.argv[1]
-    path = os.path.abspath('data/0003_0005_0003/tiles')
+    path = os.path.abspath('data/0001_0000_0000/tiles')
     print(path)
     directory = path
     solve_puzzle(directory)

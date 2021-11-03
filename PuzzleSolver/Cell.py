@@ -10,11 +10,33 @@ class Cell:
         self._image_name = image_name
         self._image = image
 
-        self._cells_links = {}
+        self._cells_links = {
+            0: None,
+            1: None,
+            2: None,
+            3: None,
+        }
         self._sides = []
+        self._available_space = 0
 
         if self._image.any():
             self._get_sides()
+
+    def get_cells_links_values(self):
+        return [i for i in self.cells_links.values() if i is not None]
+
+    def has_same_side(self, other_cell):
+        values = [value for key, value in self.cells_links.items()]
+        if other_cell in values:
+            return True
+        else:
+            return False
+
+    def has_available_space(self):
+        if self._available_space > 0:
+            return True
+        else:
+            return False
 
     @property
     def image(self):
@@ -29,7 +51,6 @@ class Cell:
         return self._sides
 
     def rotate(self, rot_val=1):
-        print(self._cells_links)
         self._image = np.rot90(self._image, -1 * rot_val)
         new_cells = {}
 
@@ -37,8 +58,6 @@ class Cell:
             new_cells[(key + rot_val) % 4] = value
 
         self._cells_links = new_cells
-        print('rotated')
-        print(self._cells_links)
 
     def _get_sides(self):
         image = np.copy(self._image)
@@ -53,13 +72,15 @@ class Cell:
                         line_dot_list.append([i, j])
                         line_dot_color_list.append(list(image[j, i]))
                         break
-
-            self._sides.append(
-                Side(
+            side = Side(
                     line_dot_list=line_dot_list,
                     line_color=line_dot_color_list,
                 )
-            )
+
+            self._sides.append(side)
+
+            if not side.border_side:
+                self._available_space += 1
 
             image = np.rot90(image)
 
@@ -76,31 +97,24 @@ class Cell:
     def compare(self, other_cell):
         for i, first_side in enumerate(self.sides):
 
-            # fig, ax = plt.subplots(5)
-            # ax[0].plot(first_side[0], first_side[1])
-
             for j, second_side in enumerate(other_cell.sides):
                 result, result_list = first_side.does_fit(second_side)
 
-                # ax[j+1].plot(second_side[0], second_side[1][::-1])
                 if result:
                     print(f'found side for {self._image_name} {other_cell._image_name}')
                     self._cells_links[i] = other_cell
                     other_cell._cells_links[j] = self
-                    # ax[j+1].plot([i for i in range(len(result_list))], result_list, 'g')
-                # else:
-                    # ax[j+1].plot([i for i in range(len(result_list))], result_list, 'r')
-
-            # plt.show()
+                    self._available_space -= 1
+                    other_cell._available_space -= 1
 
     def __repr__(self):
         return str(self._image_name)
 
-    def __call__(self, *args, **kwargs):
-        return self._sides
-
     def __iter__(self):
         for side in self._sides:
             yield side
+
+    def __getitem__(self, item):
+        return self.cells_links[item % 4]
 
 

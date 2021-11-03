@@ -60,7 +60,7 @@ class SegmentsList:
 class Side:
     def __init__(self, line_dot_list, line_color=None):
         self._line = line_dot_list
-        self._side = False
+        self._border_side = False
         self._segments = SegmentsList()
 
         self._line_color = line_color
@@ -74,15 +74,15 @@ class Side:
 
         longest = self._segments.get_longest()
         if longest[1] / len(self._line) >= 0.70:
-            self._side = True
+            self._border_side = True
 
     @property
     def line_color(self):
         return self._line_color
 
     @property
-    def side(self):
-        return self._side
+    def border_side(self):
+        return self._border_side
 
     def __getitem__(self, index):
         return self._line_np[index]
@@ -90,10 +90,10 @@ class Side:
     def __repr__(self):
         return str(self._line_np)
 
-    def check_side(self):
+    def check_border_side(self):
         unique, counts = np.unique(self._line_np[1], return_counts=True)
         if len(counts) == 1:
-            self._side = True
+            self._border_side = True
 
     def show(self, with_color=False):
         plt.plot(self._line_np[0], self._line_np[1])
@@ -109,7 +109,7 @@ class Side:
         plt.show()
 
     def does_fit(self, other_line):
-        if other_line.side:
+        if other_line.border_side:
             return False, []
 
         max_val = 0
@@ -127,7 +127,6 @@ class Side:
                 ret_result = lines_sum
 
         seg_list = SegmentsList(ret_result)
-
 
         if seg_list.get_longest()[1] / len(ret_result) >= 0.70:
             return True, ret_result
