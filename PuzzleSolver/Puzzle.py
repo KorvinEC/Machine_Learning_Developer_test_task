@@ -13,7 +13,6 @@ class Puzzle:
         self._cells_list = []
         self._cells_to_save = []
         self._load_cells_from_path(folder_path)
-        self._init_dims()
 
     def __str__(self):
         return str([str(i) for i in self._cells_list])
@@ -27,15 +26,6 @@ class Puzzle:
             image = np.loadtxt(path, skiprows=3, dtype=np.uint8).reshape((h, w, CHANNEL_NUM))
 
             self._cells_list.append(Cell(image_name, image))
-
-    def _init_dims(self):
-        dims = np.array([t.image.shape[:2] for t in self._cells_list])
-        self._h, self._w = np.min(dims, axis=0)
-
-        self._x_nodes = np.arange(0, W, self._w)
-        self._y_nodes = np.arange(0, H, self._h)
-        xx, yy = np.meshgrid(self._x_nodes, self._y_nodes)
-        self._nodes = np.vstack((xx.flatten(), yy.flatten())).T
 
     def _simulate_solve(self):
         self._cells_list[0].sides[0].cell_link = self._cells_list[5]
@@ -102,15 +92,15 @@ class Puzzle:
         for first_cell in self._cells_list:
             if first_cell.has_available_space():
                 for second_cell in self._cells_list:
-                    if not first_cell.has_same_side(second_cell) and \
+                    if first_cell != second_cell and \
                             first_cell.has_available_space() and \
                             second_cell.has_available_space() and \
-                            first_cell != second_cell:
+                            not first_cell.has_same_side(second_cell):
                         first_cell.compare(second_cell)
 
     def solve(self):
-        # self._create_solved_graph()
-        self._simulate_solve()
+        self._create_solved_graph()
+        # self._simulate_solve()
 
         # for cell in self._cells_list:
         #     print(cell, cell.sides)
@@ -159,54 +149,87 @@ class Puzzle:
 
         x, y = 0, 0
         cell = self._cells_to_save[0]
-
-        i = 0
-        while 1:
-            if i == 2:
-                break
-            j = 0
-            first_cell = cell
+        try:
             while 1:
-                # if i == 1 and j == 2:
-                #     break
-                img_y, img_x = cell.image.shape[:2]
+                first_cell = cell
+                while 1:
+                    img_y, img_x = cell.image.shape[:2]
 
-                if i <= 0:
-                    x -= cell.sides[3].line[-1][1]
-                if i > 0:
-                    temp_y = y - cell.sides[0].line[0][1]
+                    x_align = cell.sides[0].x_align
+                    y_align = cell.sides[0].y_align
+                    x_d = cell.sides[3].line[x_align: y_align][-1][1]
+                    y_d = cell.sides[0].line[x_align: y_align][0][1]
+                    print(cell, x, x_d)
+                    print(' ' * 8, y, y_d)
+                    print('-' * 16)
+                    print(' ' * 8, cell.sides[0].x_align, cell.sides[0].y_align)
+                    print(' ' * 8, cell.sides[1].x_align, cell.sides[1].y_align)
+                    print(' ' * 8, cell.sides[2].x_align, cell.sides[2].y_align)
+                    print(' ' * 8, cell.sides[3].x_align, cell.sides[3].y_align)
+                    result_img[y: y + img_y, x - x_d: x - x_d + img_x] += cell.image
 
-                print(i, j, 'x', x, img_x, cell.sides[1].line[0][1], cell.sides[3].line[-1][1])
-                print(i, j, 'y', y, img_y, cell.sides[0].line[0][1])
-                print()
+                    x += img_x - cell.sides[1].line[0][1]
 
-                result_img[y: y + img_y, x: x + img_x] = cell.image
-
-                x += img_x - cell.sides[1].line[0][1]
-
-                if cell.sides[1].cell_link:
-                    cell = cell.sides[1].cell_link
-                    j += 1
+                    if cell.sides[1].cell_link:
+                        cell = cell.sides[1].cell_link
+                    else:
+                        break
+                if first_cell.sides[2].cell_link:
+                    x = 0
+                    _, y = first_cell.image.shape[:2]
+                    cell = first_cell.sides[2].cell_link
                 else:
-                    j = 0
                     break
-
-            if first_cell.sides[2].cell_link:
-                i += 1
-                x = 0
-                img_y, img_x = first_cell.image.shape[:2]
-
-                print('in final', img_y, img_x)
-
-                y = img_y - first_cell.sides[2].line[-1][1]
-
-                first_cell = cell = first_cell.sides[2].cell_link
-            else:
-                i = 0
-                break
-
-        write_image_ppm(path, result_img)
-        print(f'Saved image in {os.path.abspath(path)}')
+        except Exception as e:
+            # print(cell, x, x_d)
+            # print(' ' * 8, y, y_d)
+            print(e)
+        finally:
+            write_image_ppm(path, result_img)
+            print(f'Saved image in {os.path.abspath(path)}')
+        # while 1:
+        #     if i == 2:
+        #         break
+        #     j = 0
+        #     first_cell = cell
+        #     while 1:
+        #         # if i == 1 and j == 2:
+        #         #     break
+        #         img_y, img_x = cell.image.shape[:2]
+        #
+        #         if i <= 0:
+        #             x -= cell.sides[3].line[-1][1]
+        #         if i > 0:
+        #             temp_y = y - cell.sides[0].line[0][1]
+        #
+        #         print(i, j, 'x', x, img_x, cell.sides[1].line[0][1], cell.sides[3].line[-1][1])
+        #         print(i, j, 'y', y, img_y, cell.sides[0].line[0][1])
+        #         print()
+        #
+        #         result_img[y: y + img_y, x: x + img_x] = cell.image
+        #
+        #         x += img_x - cell.sides[1].line[0][1]
+        #
+        #         if cell.sides[1].cell_link:
+        #             cell = cell.sides[1].cell_link
+        #             j += 1
+        #         else:
+        #             j = 0
+        #             break
+        #
+        #     if first_cell.sides[2].cell_link:
+        #         i += 1
+        #         x = 0
+        #         img_y, img_x = first_cell.image.shape[:2]
+        #
+        #         print('in final', img_y, img_x)
+        #
+        #         y = img_y - first_cell.sides[2].line[-1][1]
+        #
+        #         first_cell = cell = first_cell.sides[2].cell_link
+        #     else:
+        #         i = 0
+        #         break
 
 
 def write_image_ppm(path, img):

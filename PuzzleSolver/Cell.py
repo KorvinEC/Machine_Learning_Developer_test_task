@@ -20,12 +20,11 @@ class Cell:
         return [i for i in self.sides.values() if i.cell_link is not None]
 
     def has_same_side(self, other_cell):
-        values = [value for key, value in self.sides.items()]
-
-        if other_cell in values:
-            return True
-        else:
-            return False
+        for side in self._sides.values():
+            if side.cell_link == other_cell:
+                return True
+            else:
+                False
 
     def has_available_space(self):
         if self._available_space > 0:
@@ -81,22 +80,55 @@ class Cell:
 
     def show_sides(self):
         fig, ax = plt.subplots(len(self.sides))
-        for i, side in enumerate(self.sides):
+        for i, side in self.sides:
             ax[i].plot(side[0], side[1])
         plt.show()
 
     def compare(self, other_cell):
+        # self.show_image()
+        # other_cell.show_image()
+
         for i, first_side in self._sides.items():
 
-            for j, second_side in other_cell.sides.items():
-                result, result_list = first_side.does_fit(second_side)
+            # fig, ax = plt.subplots(5, 1)
+            # ax[0].plot(first_side.line_np[0], first_side.line_np[1])
 
-                if result:
-                    print(f'found side for {self._image_name} {other_cell._image_name}')
-                    self._sides[i].cell_link = other_cell
-                    other_cell.sides[j].cell_link = self
-                    self._available_space -= 1
-                    other_cell._available_space -= 1
+            for j, second_side in other_cell.sides.items():
+                print(i, j)
+                first_side.does_fit(second_side)
+                print()
+
+                # result, result_list, longest, shift  = first_side.does_fit(second_side)
+                #
+                # print(result, longest, shift)
+                #
+                # ax[j+1].plot(second_side.line_np[0], second_side.line_np[1][::-1])
+                # ax[j+1].plot([i for i in range(len(result_list))], result_list)
+                #
+                # if result:
+                #     print(f'found side for {self._image_name} {other_cell._image_name}')
+                #     print(longest)
+                #     self._sides[i].cell_link = other_cell
+                #     other_cell.sides[j].cell_link = self
+                #
+                #     self._available_space -= 1
+                #     other_cell._available_space -= 1
+                #
+                #     first_side.x_align = longest[2]
+                #     first_side.y_align = longest[1]
+                #
+                #     print(shift)
+                #
+                #     second_side.x_align = longest[1]
+                #     second_side.y_align = longest[2]
+                #
+                #     ax[j + 1].plot(longest[2], 0, 'bo')
+                #     ax[j + 1].plot(longest[2] + longest[1], 0, 'bo')
+                #
+                #     ax[0].plot(longest[2], 0, 'bo')
+                #     ax[0].plot(longest[2] + longest[1], 0, 'bo')
+
+            # plt.show()
 
     def __repr__(self):
         return str(self._image_name)
