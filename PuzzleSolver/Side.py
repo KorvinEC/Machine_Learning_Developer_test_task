@@ -135,13 +135,55 @@ class Side:
         first_color = self.line_color.astype(np.int32)
         second_color = other_line.line_color[::-1].astype(np.int32)
 
-        mse = np.sum((first_color - second_color) ** 2) / len(first_color)
+        if first_color.shape != second_color.shape:
+            return False
+
+        sub = first_color - second_color
+
+        # sub = sub ** 2
+        # print('full', [[i[0], i[1], i[2]] for i in sub])
+
+        # print(f'first_color  {[[i[0],  i[1], i[2]] for i in first_color]}')
+        # print(f'second_color {[[i[0],  i[1], i[2]] for i in second_color]}')
+        #
+        # print(f'sub          {[[i[0], i[1], i[2]] for i in sub]}')
+        #
+        # print(f'r            {list(sub[:, 0])}')
+        # print(f'g            {list(sub[:, 1])}')
+        # print(f'b            {list(sub[:, 2])}')
+        # print(list(np.abs(first_color - second_color)))
+
+        mse_r = np.sum(sub[:, 0] ** 2) / len(first_color)
+        mse_g = np.sum(sub[:, 1] ** 2) / len(first_color)
+        mse_b = np.sum(sub[:, 2] ** 2) / len(first_color)
 
         # print(list(first_color))
         # print(list(second_color))
 
-        print(mse, mse < 7000.)
-        if mse < 5000.:
+        unique, counts = np.unique(first_color, return_counts=True)
+        print(f'unique       {[(i, j) for i, j in zip(unique, counts)]}')
+        print(f'len          {len(unique)}')
+
+        print(f'mse_r        {mse_r}')
+        print(f'mse_g        {mse_g}')
+        print(f'mse_b        {mse_b}')
+
+        mse_test = [np.sum([i[0], i[1], i[2]]) / 3 for i in sub ** 2]
+        mse_test_sum = sum(mse_test) / len(mse_test)
+
+        print(f'mse chan     {mse_test}')
+        print(f'max and min  {np.max(mse_test)} {np.min(mse_test)}')
+        print(f'avg          {np.average(mse_test)}')
+        print(f'avg abs      {np.average(abs(sub))}')
+        # print(f'avg          {np.average(mse_test)}')
+        # print(f'mse chann    {[  for i in sub]}')
+
+        print()
+
+        thresh = 2000.
+
+        # if mse_r < thresh and mse_b < thresh and mse_g < thresh:
+        if np.average(abs(sub)) < 30.:
             return True
         else:
             return False
@@ -149,7 +191,11 @@ class Side:
     def does_fit(self, other_line, threshold=0.70):
         if other_line.border_side and self.border_side:
             return self._check_colors(other_line)
-        elif other_line.border_side or self.border_side:
+
+        # elif other_line.border_side or self.border_side:
+        #     return False
+
+        if other_line.border_side or self.border_side:
             return False
 
         if self._line_np[1].shape > other_line[1].shape:

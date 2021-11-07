@@ -20,6 +20,10 @@ class Puzzle:
     def __str__(self):
         return str([str(i) for i in self._cells_list])
 
+    @property
+    def cells_list(self):
+        return self._cells_list
+
     def save_pickle(self, name):
 
         with open(name, 'wb') as outp:
@@ -61,9 +65,11 @@ class Puzzle:
                         # print('*' * 16)
                         if res:
                             print(f'Found side for {first_cell} and {second_cell}')
-                    print('-'*16)
+                    # print('-'*16)
             # print()
-        print('Ended solving')
+        print(f'Ended solving')
+        for cell in self._cells_list:
+            print(cell, cell.sides)
 
     def solve(self):
         self._create_solved_graph()
