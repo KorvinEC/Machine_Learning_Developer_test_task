@@ -2,10 +2,20 @@ from PuzzleSolver.Puzzle import Puzzle
 
 
 def main():
-    path = 'data/0001_0000_0000/test_dir'
-    puzzle = Puzzle(path)
+    name = '0000_0000_0000'
+
+    path = f'data/{name}/test'
+    puzzle = Puzzle(path, 0.7)
+
+    # puzzle.save_pickle(f'{name}.pkl')
+    # puzzle = Puzzle.load_pickle(f'{name}.pkl')
+
     puzzle.solve()
-    # puzzle.save()
+
+    # puzzle.save_pickle(f'{name}.pkl')
+
+    # puzzle = Puzzle.load_pickle(f'{name}.pkl')
+    puzzle.save(name + '.ppm')
 
 
 if __name__ == "__main__":

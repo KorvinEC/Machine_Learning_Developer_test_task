@@ -3,31 +3,6 @@ from matplotlib import pyplot as plt
 from math import e, log
 
 
-def entropy(labels, base=None):
-    """ Computes entropy of label distribution. """
-
-    n_labels = len(labels)
-
-    if n_labels <= 1:
-        return 0
-
-    value, counts = np.unique(labels, return_counts=True)
-    probs = counts / n_labels
-    n_classes = np.count_nonzero(probs)
-
-    if n_classes <= 1:
-        return 0
-
-    ent = 0.
-
-    # Compute entropy
-    base = e if base is None else base
-    for i in probs:
-        ent -= i * log(i, base)
-
-    return ent
-
-
 class SegmentsList:
     def __init__(self, initial_list=None):
         self._list = []
@@ -71,6 +46,13 @@ class Side:
 
         self.create_segmentation()
 
+        # seg_list = SegmentsList(line_sum)
+        # longest = seg_list.get_longest()
+        #
+        # if longest[1] / len(line_sum) >= 0.70:
+        #     x_b, y_b = longest[2], longest[2] + longest[1]
+        #     x_s, y_s = longest[2] - i, longest[2] + longest[1] - i
+
     def create_segmentation(self):
         for index, value in self._line:
             self._segments(value)
@@ -78,6 +60,11 @@ class Side:
         longest = self._segments.get_longest()
         if longest[1] / len(self._line) >= 0.70:
             self._border_side = True
+
+            x, y = longest[2], longest[2] + longest[1]
+
+            self.x_align = x
+            self.y_align = y
 
     @property
     def x_align(self):
@@ -143,91 +130,131 @@ class Side:
 
         plt.show()
 
-    def does_fit(self, other_line):
+    def _check_colors(self, other_line):
+
+        np.set_printoptions(linewidth=np.inf)
+
+        print(list(self.line_color))
+        print(list(other_line.line_color))
+        print()
+        # print(list(self.line_color.astype(np.int8) - other_line.line_color.astype(np.int8)))
+        # print(self.line_color - other_line.line_color)
+
+        # err = np.sum((self.line_color.astype("float") - other_line.line_color.astype("float")) ** 2)
+        # err /= float(self.line_color.shape[0] * other_line.line_color.shape[1])
+
+    def does_fit(self, other_line, threshold=0.70):
+        if other_line.border_side and self.border_side:
+            self._check_colors(other_line)
+
         if other_line.border_side or self.border_side:
             return False
 
-        shape_diff = abs(self._line_np[1].shape[0] - other_line[1].shape[0])
-
         if self._line_np[1].shape > other_line[1].shape:
-            bigger_line = self.line_np[1]
-            smaller_line = np.zeros(bigger_line.shape, dtype=np.int16)
-            smaller_line[:other_line[1].shape[0]] = other_line[1][::-1]
+            bigger_side = self
+            smaller_side = other_line
         else:
-            bigger_line = other_line.line_np[1]
-            smaller_line = np.zeros(bigger_line.shape, dtype=np.int16)
-            smaller_line[:self.line_np[1].shape[0]] = self.line_np[1][::-1]
+            bigger_side = other_line
+            smaller_side = self
 
-        max_val = 0
+        bigger_line = bigger_side.line_np[1]
+        smaller_line = np.zeros(bigger_line.shape, dtype=np.uint8)
+        smaller_line[:smaller_side.line_np[1].shape[0]] = smaller_side.line_np[1][::-1]
 
-        for i in range(shape_diff):
+        for i in range(len(bigger_line)):
             line_sum = bigger_line + np.roll(smaller_line, i)
 
-            unique, counts = np.unique(line_sum, return_counts=True)
+            seg_list = SegmentsList(line_sum)
+            longest = seg_list.get_longest()
 
-            new_max = np.max(counts)
+            if longest[1] / len(line_sum) >= threshold:
 
-            if new_max > max_val:
-                max_val = new_max
-                shift = i
-                ret_result = line_sum
+                x, y = longest[2], longest[2] + longest[1]
 
-        seg_list = SegmentsList(ret_result)
-        longest = seg_list.get_longest()
+                bigger_side.x_align = x
+                bigger_side.y_align = y
 
-        if longest[1] / len(ret_result) >= 0.70:
-            print('True')
-        else:
-            print('False')
+                size_bg, = bigger_side.line_np[1].shape
+                size_sm, = smaller_side.line_np[1].shape
 
-        # lines_sum = [i + j for i, j in zip(np.roll(self._line_np[1], 13), other_line[1][::-1])]
+                smaller_side.x_align = (size_sm - y + i) % size_bg if size_bg != size_sm else (size_sm - y + i)
+                smaller_side.y_align = (size_sm - x + i) % size_bg if size_bg != size_sm else (size_sm - x + i)
 
-        # fig, ax = plt.subplots(2, 1)
-        # ax[0].plot(bigger_line[0], bigger_line[1])
-        # ax[1].plot(smaller_line[0], smaller_line[1][::-1])
-        # ax[1].plot(other_line.line_np[0], other_line.line_np[1][::-1])
+                # testing(
+                #     bigger_side, smaller_side,
+                #     i,
+                #     bigger_line, smaller_line, line_sum,
+                #     x, y
+                # )
+
+                return True
+
+        return False
+
+
+def testing(bigger_side, smaller_side, i, bigger_line, smaller_line, line_sum, x, y):
+    big_size = bigger_side.line_np[0].shape[0]
+    size, = smaller_side.line_np[1].shape
+
+    print(' ' * 4, bigger_side.x_align, bigger_side.y_align)
+    print(' ' * 4, big_size, size, i)
+    print(' ' * 4, smaller_side.x_align, smaller_side.y_align)
+
+    fig, ax = plt.subplots(4, 1)
+    # ax[0].set_xlim([0, big_size])
+    # ax[1].set_xlim([0, big_size])
+    # ax[1].set_xlim([-1 * bigger_side.line_np[0].shape[0], bigger_side.line_np[0].shape[0]])
+    # ax[2].set_xlim([2 * bigger_side.line_np[0].shape[0], bigger_side.line_np[0].shape[0]])
+    # ax[3].set_xlim([0, big_size])
+
+    ax[0].plot(np.arange(bigger_line.shape[0]), bigger_line)
+    ax[0].set_ylabel('bigger')
+    ax[1].plot(np.arange(smaller_line.shape[0]), smaller_line)
+    ax[1].set_ylabel('line')
+    ax[2].plot(smaller_side.line_np[0], smaller_side.line_np[1])
+    ax[2].set_ylabel('side')
+
+    ax[3].plot([i for i in range(len(smaller_line))], np.roll(smaller_line, i))
+    ax[3].plot([i for i in range(len(line_sum))], line_sum)
+    ax[3].set_ylabel('result')
+
+    first_line = np.arange(x, y)
+    second_line = np.arange((x - i) % big_size, (y - i) % big_size)
+
+    third_line = np.arange(smaller_side.x_align, smaller_side.y_align)
+
+    ax[0].plot(first_line, np.zeros(first_line.shape) - 10, 'b')
+    ax[1].plot(second_line, np.zeros(second_line.shape) - 10, 'b')
+    ax[2].plot(third_line, np.zeros(third_line.shape) - 10, 'g')
+
+    plt.show()
+
+    # if ret_val:
+    #     longest = ret_seg.get_longest()
+
+        # fig, ax = plt.subplots(3, 1)
+
+        # ax[0].plot([i for i in range(len(bigger_line))], bigger_line)
+        # ax[1].plot([i for i in range(len(smaller_line))], smaller_line)
+        # ax[1].plot([i for i in range(len(ret_list))], ret_list)
+        # ax[2].plot([i for i in range(len(smaller_line))], smaller_line)
+        #
+        # first_line = np.arange(longest[2], longest[2] + longest[1])
+        # second_line = np.arange(longest[2] - shift, longest[2] + longest[1] - shift)
+        # ax[0].plot(first_line, np.zeros(first_line.shape) - 10, 'b')
+        # ax[1].plot(second_line, np.zeros(second_line.shape) - 10, 'b')
+
+        # ax[1].plot(longest[2] - shift, 0, 'bo')
+        # ax[1].plot(longest[2] + longest[1] - shift, 0, 'bo')
+
+        # def animate(i):
+        #     ax[2].clear()
+        #     ax[2].plot([i for i in range(len(smaller_line))], np.roll(smaller_line, i))
+        #     ax[2].plot([i for i in range(len(results[i]))], results[i])
+        #
+        # anim = animation.FuncAnimation(fig, animate, interval=50, frames=len(results))
+        # anim.save(os.path.join(os.path.abspath('gifs'), f'{0}-{0}.gif'))
+
         # plt.show()
 
-        # max_val = 0
-        #
-        # if self._line_np[1].shape > other_line[1].shape:
-        #     bigger_line = self._line_np[1]
-        #     smaller_line = other_line[1][::-1]
-        # else:
-        #     bigger_line = other_line[1][::-1]
-        #     smaller_line = self._line_np[1]
-        #
-        # for i in range(len(bigger_line)):
-        #     bigger_line = np.roll(bigger_line, i)
-        #     lines_sum = bigger_line
-        #     lines_sum[:smaller_line.shape[0]] += smaller_line
-
-            # lines_sum =
-            # lines_sum = [i + j for i, j in zip(np.roll(self._line_np[1], i), other_line[1][::-1])]
-
-            # print(self._line_np[1].shape, other_line[1].shape, self._line_np[1].shape > other_line[1].shape)
-
-            # if self._line_np[1].shape > other_line[1].shape:
-            #     lines_sum = np.roll(self._line_np[1], i)
-            #     lines_sum[:len(other_line[1][::-1])] += other_line[1][::-1]
-            # else:
-            #     lines_sum = other_line[1][::-1]
-            #     lines_sum[:len(np.roll(self._line_np[1], i))] += np.roll(self._line_np[1], i)
-
-        #     unique, counts = np.unique(lines_sum, return_counts=True)
-        #
-        #     new_max = np.max(counts)
-        #
-        #     if new_max > max_val:
-        #         max_val = new_max
-        #         shift = i
-        #         ret_result = lines_sum
-        #
-        # seg_list = SegmentsList(ret_result)
-        # longest = seg_list.get_longest()
-        #
-        # if longest[1] / len(ret_result) >= 0.70:
-        #     return True, ret_result, longest, shift
-        # else:
-        #     return False, ret_result, [None, None, None], shift
-
+    # return ret_val
