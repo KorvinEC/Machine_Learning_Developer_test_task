@@ -132,22 +132,24 @@ class Side:
 
     def _check_colors(self, other_line):
 
-        np.set_printoptions(linewidth=np.inf)
+        first_color = self.line_color.astype(np.int32)
+        second_color = other_line.line_color[::-1].astype(np.int32)
 
-        print(list(self.line_color))
-        print(list(other_line.line_color))
-        print()
-        # print(list(self.line_color.astype(np.int8) - other_line.line_color.astype(np.int8)))
-        # print(self.line_color - other_line.line_color)
+        mse = np.sum((first_color - second_color) ** 2) / len(first_color)
 
-        # err = np.sum((self.line_color.astype("float") - other_line.line_color.astype("float")) ** 2)
-        # err /= float(self.line_color.shape[0] * other_line.line_color.shape[1])
+        # print(list(first_color))
+        # print(list(second_color))
+
+        print(mse, mse < 7000.)
+        if mse < 5000.:
+            return True
+        else:
+            return False
 
     def does_fit(self, other_line, threshold=0.70):
         if other_line.border_side and self.border_side:
-            self._check_colors(other_line)
-
-        if other_line.border_side or self.border_side:
+            return self._check_colors(other_line)
+        elif other_line.border_side or self.border_side:
             return False
 
         if self._line_np[1].shape > other_line[1].shape:

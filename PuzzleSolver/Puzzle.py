@@ -56,10 +56,12 @@ class Puzzle:
                     if first_cell != second_cell and not first_cell.has_same_side(second_cell) and \
                             first_cell.has_available_space() and \
                             second_cell.has_available_space():
+                        print(first_cell, second_cell)
                         res = first_cell.compare(second_cell, self._threshold)
+                        # print('*' * 16)
                         if res:
                             print(f'Found side for {first_cell} and {second_cell}')
-                    # print('-'*16)
+                    print('-'*16)
             # print()
         print('Ended solving')
 
@@ -121,6 +123,9 @@ class Puzzle:
 
     def save(self, path="image.ppm"):
         result_img = np.zeros((H, W, CHANNEL_NUM), dtype=np.uint8)
+
+        if len(self._cells_to_save.shape) != 2:
+            raise IndexError(f'Wrong shape {self._cells_to_save.shape}')
 
         if self._cells_to_save.shape[0] > self._cells_to_save.shape[1]:
             result_img = np.rot90(result_img)

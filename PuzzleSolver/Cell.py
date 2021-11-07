@@ -106,8 +106,6 @@ class Cell:
 
                 result = first_side.does_fit(second_side, threshold=threshold)
 
-                print()
-
                 if result:
                     self._sides[i].cell_link = other_cell
                     other_cell.sides[j].cell_link = self
@@ -116,6 +114,7 @@ class Cell:
                     other_cell.available_space -= 1
 
                     return True
+            print('-' * 16)
 
         return False
 
