@@ -15,7 +15,6 @@ class Puzzle:
         self._cells_to_save = np.array([])
         self._load_cells_from_path(folder_path)
         self._threshold = threshold
-        # self._graph_shape = [0, 0, CHANNEL_NUM]
 
     def __str__(self):
         return str([str(i) for i in self._cells_list])
@@ -60,7 +59,7 @@ class Puzzle:
                     if first_cell != second_cell and not first_cell.has_same_side(second_cell) and \
                             first_cell.has_available_space() and \
                             second_cell.has_available_space():
-                        print(first_cell, second_cell)
+                        # print(first_cell, second_cell)
                         res = first_cell.compare(second_cell, self._threshold)
                         # print('*' * 16)
                         if res:
@@ -70,10 +69,12 @@ class Puzzle:
         print(f'Ended solving')
         for cell in self._cells_list:
             print(cell, cell.sides)
+        print()
 
-    def solve(self):
+    def create_solved_graph(self):
         self._create_solved_graph()
 
+    def solve(self):
         result = []
 
         for cell in self._cells_list:
@@ -90,14 +91,31 @@ class Puzzle:
                 print('first-cell: ', cell, cell.sides)
 
                 row_results.append(cell)
-
+                j = 0
                 while 1:
+                    if j == len(self._cells_list):
+                        raise RecursionError('Wrong graph created')
+
                     previous_cell = cell
                     new_cell = cell.sides[1].cell_link
 
+                    i = 0
                     while 1:
+                        if i == len(self._cells_list):
+                            raise RecursionError('Wrong graph created')
+
+                        # print(previous_cell)
+                        # print(new_cell, new_cell.sides )
+
                         while new_cell.sides[3].cell_link != previous_cell:
                             new_cell.rotate(1)
+
+                        # for rotate in range(4):
+                        #     # print(new_cell.sides[3])
+                        #     if new_cell.sides[3].cell_link != previous_cell:
+                        #         new_cell.rotate(1)
+                        #     elif rotate == 3:
+                        #         raise RecursionError('Wrong graph created')
 
                         row_results.append(new_cell)
                         print('new-cell: ', new_cell, new_cell.sides)
@@ -108,6 +126,7 @@ class Puzzle:
                         else:
                             print()
                             break
+                        i += 1
 
                     result.append(row_results)
 
@@ -123,27 +142,32 @@ class Puzzle:
                         print('next-row-cell: ', cell, cell.sides)
                     else:
                         break
+                    j += 1
                 break
 
         self._cells_to_save = np.array(result)
 
     def save(self, path="image.ppm"):
-        result_img = np.zeros((H, W, CHANNEL_NUM), dtype=np.uint8)
-
-        if len(self._cells_to_save.shape) != 2:
-            raise IndexError(f'Wrong shape {self._cells_to_save.shape}')
-
-        if self._cells_to_save.shape[0] > self._cells_to_save.shape[1]:
-            result_img = np.rot90(result_img)
-
-        x, y = 0, 0
-        cell = self._cells_to_save[0][0]
         try:
+            result_img = np.zeros((H, W, CHANNEL_NUM), dtype=np.uint8)
+
+            if len(self._cells_to_save.shape) != 2:
+                raise IndexError(f'Wrong shape {self._cells_to_save.shape}')
+
+            if self._cells_to_save.shape[0] > self._cells_to_save.shape[1]:
+                result_img = np.rot90(result_img)
+
+            x, y = 0, 0
+            cell = self._cells_to_save[0][0]
             i = 0
             while 1:
+                if i == len(self._cells_list):
+                    raise RecursionError('Wrong graph created')
                 first_cell = cell
                 j = 0
                 while 1:
+                    if j == len(self._cells_list):
+                        raise RecursionError('Wrong graph created')
 
                     img_y, img_x = cell.image.shape[:2]
 
@@ -162,7 +186,7 @@ class Puzzle:
                     print(' ' * 4, 'img   :', img_x, img_y)
                     print(' ' * 4, 'delta :', x_d, y_d)
 
-                    result_img[y - y_d: y - y_d + img_y, x: x   + img_x] += cell.image
+                    result_img[y - y_d: y - y_d + img_y, x: x + img_x] += cell.image
 
                     x_a = cell.sides[1].x_align
                     y_a = cell.sides[1].y_align
@@ -203,8 +227,9 @@ class Puzzle:
 
                 else:
                     break
+
         except Exception as e:
-            raise e
+            print(f'Exception raised: {e}')
         finally:
             write_image_ppm(path, result_img)
             print(f'Saved image in {os.path.abspath(path)}')

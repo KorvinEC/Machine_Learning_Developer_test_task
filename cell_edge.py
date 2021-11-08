@@ -86,11 +86,6 @@ def main():
 
     changed = [(i * -1) + np.amax(second_line[1]) for i in second_line[1][::-1]]
 
-    # fig, ax = plt.subplots(2)
-    # ax[0].imshow(res_tile, interpolation='nearest')
-    # ax[1].plot(second_line[0], changed)
-    # plt.show()
-
     result = [i - j for i, j in zip(first_line[1], changed)]
     result_0 = [i - j for i, j in zip(first_line[1][11:], changed)]
 

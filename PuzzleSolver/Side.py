@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 from math import e, log
 
 
@@ -46,12 +46,6 @@ class Side:
 
         self.create_segmentation()
 
-        # seg_list = SegmentsList(line_sum)
-        # longest = seg_list.get_longest()
-        #
-        # if longest[1] / len(line_sum) >= 0.70:
-        #     x_b, y_b = longest[2], longest[2] + longest[1]
-        #     x_s, y_s = longest[2] - i, longest[2] + longest[1] - i
 
     def create_segmentation(self):
         for index, value in self._line:
@@ -140,41 +134,38 @@ class Side:
 
         sub = first_color - second_color
 
-        # sub = sub ** 2
-        # print('full', [[i[0], i[1], i[2]] for i in sub])
+        # unique, counts = np.unique(first_color, return_counts=True)
+        # unique_2, counts_2 = np.unique(second_color, return_counts=True)
+        # print(f'unique       {[{i: j} for i, j in zip(unique, counts)]}')
+        # print(f'len          {len(unique)}')
+        # print(f'unique       {[{i: j} for i, j in zip(unique_2, counts_2)]}')
+        # print(f'len          {len(unique_2)}')
 
-        # print(f'first_color  {[[i[0],  i[1], i[2]] for i in first_color]}')
-        # print(f'second_color {[[i[0],  i[1], i[2]] for i in second_color]}')
-        #
-        # print(f'sub          {[[i[0], i[1], i[2]] for i in sub]}')
-        #
-        # print(f'r            {list(sub[:, 0])}')
-        # print(f'g            {list(sub[:, 1])}')
-        # print(f'b            {list(sub[:, 2])}')
-        # print(list(np.abs(first_color - second_color)))
+        # mse_r = (sub[:, 0] ** 2) / len(first_color)
+        # mse_g = (sub[:, 1] ** 2) / len(first_color)
+        # mse_b = (sub[:, 2] ** 2) / len(first_color)
 
-        mse_r = np.sum(sub[:, 0] ** 2) / len(first_color)
-        mse_g = np.sum(sub[:, 1] ** 2) / len(first_color)
-        mse_b = np.sum(sub[:, 2] ** 2) / len(first_color)
-
-        # print(list(first_color))
-        # print(list(second_color))
-
-        unique, counts = np.unique(first_color, return_counts=True)
-        print(f'unique       {[(i, j) for i, j in zip(unique, counts)]}')
-        print(f'len          {len(unique)}')
-
-        print(f'mse_r        {mse_r}')
-        print(f'mse_g        {mse_g}')
-        print(f'mse_b        {mse_b}')
+        # print(f'mse_r        {np.sum(mse_r)}')
+        # print(f'max     min  {np.max(mse_r)} {np.min(mse_r)}')
+        # print(f'mse_g        {np.sum(mse_g)}')
+        # print(f'max     min  {np.max(mse_g)} {np.min(mse_g)}')
+        # print(f'mse_b        {np.sum(mse_b)}')
+        # print(f'max     min  {np.max(mse_b)} {np.min(mse_b)}')
 
         mse_test = [np.sum([i[0], i[1], i[2]]) / 3 for i in sub ** 2]
         mse_test_sum = sum(mse_test) / len(mse_test)
 
         print(f'mse chan     {mse_test}')
-        print(f'max and min  {np.max(mse_test)} {np.min(mse_test)}')
         print(f'avg          {np.average(mse_test)}')
-        print(f'avg abs      {np.average(abs(sub))}')
+
+        # print(f'avg abs      {np.average(abs(sub))}')
+
+        # avg_r = np.average(abs(sub[:, 0]))
+        # avg_g = np.average(abs(sub[:, 1]))
+        # avg_b = np.average(abs(sub[:, 2]))
+        # print(f'avg_r        {avg_r}')
+        # print(f'avg_g        {avg_g}')
+        # print(f'avg_b        {avg_b}')
         # print(f'avg          {np.average(mse_test)}')
         # print(f'mse chann    {[  for i in sub]}')
 
@@ -183,14 +174,14 @@ class Side:
         thresh = 2000.
 
         # if mse_r < thresh and mse_b < thresh and mse_g < thresh:
-        if np.average(abs(sub)) < 30.:
+        if np.average(mse_test) < thresh:
             return True
         else:
             return False
 
     def does_fit(self, other_line, threshold=0.70):
-        if other_line.border_side and self.border_side:
-            return self._check_colors(other_line)
+        # if other_line.border_side and self.border_side:
+        #     return self._check_colors(other_line)
 
         # elif other_line.border_side or self.border_side:
         #     return False
@@ -215,6 +206,7 @@ class Side:
             seg_list = SegmentsList(line_sum)
             longest = seg_list.get_longest()
 
+            # print(longest[1] / len(line_sum))
             if longest[1] / len(line_sum) >= threshold:
 
                 x, y = longest[2], longest[2] + longest[1]
@@ -236,7 +228,7 @@ class Side:
                 # )
 
                 return True
-
+        # print(longest[1] / len(line_sum))
         return False
 
 

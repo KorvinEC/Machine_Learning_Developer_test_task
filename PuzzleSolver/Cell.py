@@ -1,5 +1,4 @@
 import numpy as np
-from matplotlib import pyplot as plt
 from PuzzleSolver.Side import Side
 
 CHANNEL_NUM = 3
@@ -80,8 +79,8 @@ class Cell:
 
             self._sides[side_num] = side
 
-            # if not side.border_side:
-            self._available_space += 1
+            if not side.border_side:
+                self._available_space += 1
 
             image = np.rot90(image)
 
@@ -102,7 +101,7 @@ class Cell:
         for i, first_side in self._sides.items():
             for j, second_side in other_cell.sides.items():
 
-                print(i, j)
+                # print(i, j)
 
                 result = first_side.does_fit(second_side, threshold=threshold)
 
@@ -114,7 +113,7 @@ class Cell:
                     other_cell.available_space -= 1
 
                     return True
-            print('-' * 16)
+            # print('-' * 16)
 
         return False
 
